@@ -21,6 +21,6 @@ router.put("/blogs/:blogId" ,middleware.validateToken,middleware.authorisation,b
 
 router.delete("/blogs/:blogId", middleware.validateToken,middleware.authorisation,blogsController.deleteBlog)
 
-router.delete("/blogs",middleware.validateToken,middleware.authorisation,middleware.delQueryAuth , blogsController.blogDeletionQuery)
+router.delete("/blogs",middleware.validateToken,middleware.delQueryAuth , blogsController.blogDeletionQuery)
 
 module.exports = router;      

@@ -172,18 +172,23 @@ const putBlogs = async function (req, res) {
         if (!ObjectId.isValid(id)) {
             res.status(404).send({ status: false, error: " BAD REQUEST" })
         }
+        if (tags) {
+            if (Array.isArray(tags)) {
+                requestbody['tags'] = [...tags]
+            }}
 
         let blogExist = await blogsModel.findOneAndUpdate(filter,
             {
                 $push: { tags: tags, subcategory: subcategory },
                 $set: { title: title, body: body, isPublished: true, publishedAt: new Date() },
             }, { new: true })
-
+         console.log(blogExist)
 
         if (!blogExist) {
-            return res.status(400).send({ status: false, error: "blog not exist" })
+            return res.status(400).send({ status: false, error: "blog not exist" }) 
         }
-        res.status(200).send({ status: true, update: blogExist })
+            res.status(200).send({ status: true, update: blogExist })
+           
     }
 
 
@@ -214,7 +219,7 @@ const deleteBlog = async function (req, res) {
             res.status(404).send({ status: false, error: " BAD REQUEST" })
         }
 
-        let existId = await blogsModel.updateMany({ _id: id, isDeleted: false }, { $set: { isDeleted: true } }, { new: true })
+        let existId = await blogsModel.updateMany({ _id: id, isDeleted: false }, { $set: { isDeleted: true ,deletedAt: new Date()} }, { new: true })
         if (!existId) {
             return res.status(404).send({ msg: "blog not available" })
         }
@@ -246,7 +251,7 @@ let blogDeletionQuery = async function (req, res) {
     try {
         let query = req.query
 
-        let filter = { isdeleted: true }
+        let filter = { isdeleted: false }
 
         if (!isValidRequest(query)) return res.status(400).send({ status: false, message: "No query by user." })
         const { category, authorId, tags, subcategory, isPublished } = query
@@ -279,7 +284,7 @@ let blogDeletionQuery = async function (req, res) {
 
         //console.log(query, query.tags.length)
         let dataToDelete = await blogsModel.updateMany(filter,
-            { $set: { isDeleted: true } },
+            { $set: { isDeleted: true ,deletedAt: new Date()} },
             { new: true })
 
         if (!dataToDelete) {

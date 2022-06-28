@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const BlogsModel = require("../models/BlogsModel");
+const ObjectId = require("mongoose").Types.ObjectId
 
 
 const isValid = function (x) {
@@ -10,19 +11,26 @@ const isValid = function (x) {
 
 // for authentication
 const validateToken = function (req, res, next) {
-    let token = req.headers["x-api-key"]
-    if (!token) {
-        return res.status(401).send({ status: false, error: "token must be present" })
+    try {
+        let token = req.headers["x-api-key"]
+        if (!token) {
+            return res.status(401).send({ status: false, error: "token must be present" })
+        }
+
+        console.log(token);
+        let decodeToken = jwt.verify(token, "Akash123")
+        if (!decodeToken) {
+            res.status(401).send("status:false , error:invalid token")
+        }
+
+        req.decodedAuthorId = decodeToken
+        next();
+
     }
 
-    console.log(token);
-    let decodeToken = jwt.verify(token, "Akash123")
-    if (!decodeToken) {
-        res.status(401).send("status:false , error:invalid token")
+    catch (error) {
+        res.status(500).send({ status: false, error: error.message })
     }
-    req.decodedAuthorId = decodeToken
-
-    next();
 }
 
 //for authorisation
@@ -30,13 +38,13 @@ const validateToken = function (req, res, next) {
 const authorisation = async function (req, res, next) {
 
     try {
-        let decodeToken = req.decodedAuthorId
-        let authorLoggedId = decodeToken.authorId
 
         let blogId = req.params.blogId
         // validation of blogId
 
         if (!ObjectId.isValid(blogId)) return res.status(400).send({ status: false, msg: "Not a valid blog ID" })
+        let decodeToken = req.decodedAuthorId
+        let authorLoggedId = decodeToken.authorId
 
 
         let getAuthorId = await BlogsModel.findById(blogId)
@@ -45,6 +53,7 @@ const authorisation = async function (req, res, next) {
             return res.status(403).send({ status: false, author: "unauthorised" })
 
         }
+
 
         next();
 
@@ -71,14 +80,15 @@ const delQueryAuth = function (req, res, next) {
         if (authorId) {
             if (!ObjectId.isValid(authorId)) return res.status(400).send({ status: false, msg: "Not a valid author ID from Token" })
 
-            if ((authorId != authorLoggedId))
+            if (authorId != authorLoggedId)
                 return res.status(403).send({ status: false, error: "Unauthorized" })
         }
-         
+
+        if (!authorId) {
             authorId = authorLoggedId;
             req.query.authorId = authorId;
+        }
 
-        
         next();
     }
     catch (error) {

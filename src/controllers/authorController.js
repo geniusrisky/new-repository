@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken")
 
 
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-const passwordRegex = /^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[@$!%?&])[A-Za-z\d@$!%?&]{6,15}$/;
+const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/ ;
 const isValid = function (x) {
     if (typeof x === "undefined" || x === null) return false;
     if (typeof x === "string" && x.trim().length === 0) return false;
@@ -121,7 +121,7 @@ const loginAuthor = async function (req, res) {
         if (!(emailRegex.test(email))) {
             return res.status(400).send({ status: false, msg: "Email Should Be Valid Email Address" })
         }
-        if (!(passwordRegex.test(password))) return res.status(400).send({ status: false, msg: "Passswoor should be valid " })
+        if (!(passwordRegex.test(password))) return res.status(400).send({ status: false, msg: "Passsword should be valid " })
 
         let validateAuthor = await authorModel.findOne({ email: email, password: password })
 
@@ -138,6 +138,9 @@ const loginAuthor = async function (req, res) {
             "Akash123"
         );
         res.status(201).send({ status: true, token: token })
+
+
+
     }
     catch (error) {
         console.log("error:", error.message)
